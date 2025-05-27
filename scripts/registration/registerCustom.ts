@@ -1,52 +1,79 @@
 import { mintNFT } from '../../utils/functions/mintNFT'
 import { createCommercialRemixTerms, NFTContractAddress } from '../../utils/utils'
 import { client, account, networkInfo } from '../../utils/config'
-import { uploadJSONToIPFS } from '../../utils/functions/uploadToIpfs'
+import { uploadJSONToIPFS, uploadFileToIPFS } from '../../utils/functions/uploadToIpfs'
 import { createHash } from 'crypto'
+import { readFileSync } from 'fs';
+import path from 'path';
 import { IpMetadata } from '@story-protocol/core-sdk'
 
+const createFileHash = (filePath:string): `0x${string}` => {
+    // Read file as a Buffer
+    const fileBuffer = readFileSync(filePath);
+
+    // Create a SHA-256 hash of the file
+    const hash = createHash('sha256').update(fileBuffer).digest('hex');
+
+    return `0x${hash}`;
+}
+
 const main = async function () {
+	// 1a. Upload IP to IPFS
+    const filePath = 'assets/lensjobs-full-512x512.png';
+    const fileName = filePath.split('/').at(-1);
+    const fileType = 'image/png';
+    const fileHash = createFileHash(filePath);
+    console.log({filePath, fileName, fileType, fileHash});
+
+    const ipImagePath = filePath;
+    const ipImageName = fileName;
+    const ipImageHash = createFileHash(ipImagePath);
+    const ipImageType = 'image/png';
+    console.log({ipImagePath, ipImageName, ipImageType, ipImageHash});
+
+	const fileIpfsCid = await uploadFileToIPFS(filePath, fileName!, fileType);
+    const imageIpfsCid = await uploadFileToIPFS(ipImagePath, ipImageName!, ipImageType);
+
+    const fileURI = `https://ipfs.io/ipfs/${fileIpfsCid}`;
+    const ipImageURI = `https://ipfs.io/ipfs/${imageIpfsCid}`;
+
     // 1. Set up your IP Metadata
     //
     // Docs: https://docs.story.foundation/concepts/ip-asset/ipa-metadata-standard
     const ipMetadata: IpMetadata = client.ipAsset.generateIpMetadata({
-        title: 'Midnight Marriage',
-        description: 'This is a house-style song generated on suno.',
-        createdAt: '1740005219',
+        title: 'Lens Jobs Logo',
+        description: 'This is a ChatGPT generated logo for Lens Jobs app on Lens Protocol.',
+        createdAt: '1748328566757',
         creators: [
             {
-                name: 'Jacob Tucker',
-                address: '0xA2f9Cf1E40D7b03aB81e34BC50f0A8c67B4e9112',
+                name: 'AbdulrazaqAS',
+                address: '0xE09b13f723f586bc2D98aa4B0F2C27A0320D20AB',
                 contributionPercent: 100,
             },
         ],
-        image: 'https://cdn2.suno.ai/image_large_8bcba6bc-3f60-4921-b148-f32a59086a4c.jpeg',
-        imageHash: '0xc404730cdcdf7e5e54e8f16bc6687f97c6578a296f4a21b452d8a6ecabd61bcc',
-        mediaUrl: 'https://cdn1.suno.ai/dcd3076f-3aa5-400b-ba5d-87d30f27c311.mp3',
-        mediaHash: '0xb52a44f53b2485ba772bd4857a443e1fb942cf5dda73c870e2d2238ecd607aee',
-        mediaType: 'audio/mpeg',
+        image: ipImageURI,
+        imageHash: ipImageHash,
+        mediaUrl: fileURI,
+        mediaHash: fileHash,
+        mediaType: fileType,
     })
 
     // 2. Set up your NFT Metadata
     //
     // Docs: https://docs.opensea.io/docs/metadata-standards#metadata-structure
     const nftMetadata = {
-        name: 'Midnight Marriage',
-        description: 'This is a house-style song generated on suno. This NFT represents ownership of the IP Asset.',
-        image: 'https://cdn2.suno.ai/image_large_8bcba6bc-3f60-4921-b148-f32a59086a4c.jpeg',
-        animation_url: 'https://cdn1.suno.ai/dcd3076f-3aa5-400b-ba5d-87d30f27c311.mp3',
+        name: 'Lens Jobs Logo',
+        description: 'This is a ChatGPT generated logo for Lens Jobs app on Lens Protocol. This NFT represents ownership of the IP Asset.',
+        image: ipImageURI,
+        animation_url: fileURI,
         attributes: [
             {
-                key: 'Suno Artist',
-                value: 'amazedneurofunk956',
+                key: 'LLM',
+                value: 'ChatGPT',
             },
             {
-                key: 'Artist ID',
-                value: '4123743b-8ba6-4028-a965-75b79a3ad424',
-            },
-            {
-                key: 'Source',
-                value: 'Suno.com',
+                key: 'App Url',
+                value: 'https://lens-jobs.vercel.app',
             },
         ],
     }
