@@ -37,6 +37,11 @@ const main = async function () {
     const fileURI = `https://ipfs.io/ipfs/${fileIpfsCid}`;
     const ipImageURI = `https://ipfs.io/ipfs/${imageIpfsCid}`;
 
+    console.log({
+        fileURI,
+        ipImageURI
+    });
+
     // 1. Set up your IP Metadata
     //
     // Docs: https://docs.story.foundation/concepts/ip-asset/ipa-metadata-standard
